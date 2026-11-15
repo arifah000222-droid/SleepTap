@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f3efff">
-<title>SleepTap V3.1</title>
+<title>SleepTap V3.2</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -103,6 +103,12 @@ input {
   font-size: 14px;
 }
 
+.export-button {
+  width: 100%;
+  margin: 10px 0;
+  background: #8069bb;
+}
+
 footer {
   text-align: center;
   color: #9288a5;
@@ -118,7 +124,7 @@ footer {
 <header>
   <h1>🌙 SleepTap</h1>
   <p>Your sleep, one tap at a time.</p>
-  <span class="pill">VERSION 3.1 PROTOTYPE</span>
+  <span class="pill">VERSION 3.2 PROTOTYPE</span>
 </header>
 
 <section class="card">
@@ -182,12 +188,23 @@ footer {
     <li>Excel-compatible sleep record export</li>
     <li>SleepTap Sleep Roast</li>
   </ul>
+
   <p><strong>RM1 / 3 months</strong></p>
+
   <p class="small">
     Manual renewal. Founder access is free.
     Payment and account features are not connected in this prototype.
   </p>
-  <button disabled>Premium coming soon</button>
+
+  <button class="export-button" onclick="exportSleepData()">
+    📊 Export sleep records to Excel
+  </button>
+
+  <p class="small">
+    Downloads a CSV file that can be opened in Microsoft Excel
+    or Google Sheets. Export is enabled for prototype testing;
+    actual Premium access restrictions are not connected yet.
+  </p>
 </section>
 
 <footer>
@@ -343,6 +360,76 @@ function wakeUp() {
 }
 
 
+/* EXCEL-COMPATIBLE CSV EXPORT */
+
+function csvEscape(value) {
+  const text = String(value ?? "");
+  return '"' + text.replace(/"/g,'""') + '"';
+}
+
+function exportSleepData() {
+  const data = getData();
+
+  if(!data.records.length) {
+    alert("You don't have any completed sleep records to export yet.");
+    return;
+  }
+
+  const rows = [
+    [
+      "Sleep Date",
+      "Estimated Sleep Duration (hours)",
+      "Estimated Bedtime"
+    ]
+  ];
+
+  data.records.forEach(record => {
+    const date = new Date(record.date);
+
+    const dateText = date.toLocaleDateString("en-MY");
+
+    const bedtimeHours = Math.floor(record.bedtime / 60);
+    const bedtimeMinutes = record.bedtime % 60;
+
+    const bedtimeText =
+      String(bedtimeHours).padStart(2,"0") + ":" +
+      String(bedtimeMinutes).padStart(2,"0");
+
+    rows.push([
+      dateText,
+      Number(record.hours).toFixed(2),
+      bedtimeText
+    ]);
+  });
+
+  const csv = "\uFEFF" + rows
+    .map(row => row.map(csvEscape).join(","))
+    .join("\r\n");
+
+  const blob = new Blob(
+    [csv],
+    {type:"text/csv;charset=utf-8;"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  const today = new Date().toISOString().slice(0,10);
+
+  link.href = url;
+  link.download = "SleepTap-Records-" + today + ".csv";
+
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+
+  setTimeout(() => URL.revokeObjectURL(url),1000);
+
+  document.getElementById("message").textContent =
+    "Your sleep records have been exported successfully! 💜";
+}
+
+
 /* TIME CALCULATIONS */
 
 function circularDistance(a,b) {
@@ -375,7 +462,6 @@ function getRoastType(records) {
   const recent = records.slice(0,7);
   const latest = recent[0];
 
-  // Compare latest duration with earlier sessions.
   const previous = recent.slice(1);
 
   if(previous.length >= 3) {
@@ -391,11 +477,9 @@ function getRoastType(records) {
     }
   }
 
-  // Circular bedtime calculation handles midnight correctly.
   const times = recent.map(r=>r.bedtime);
   const deviation = averageBedtimeDeviation(times);
 
-  // A majority of recent bedtimes must be late.
   const lateCount = times.filter(
     t=>t>=0 && t<360
   ).length;
@@ -404,12 +488,10 @@ function getRoastType(records) {
     return "Late sleeper";
   }
 
-  // Large average deviation suggests an inconsistent routine.
   if(deviation >= 90) {
     return "Inconsistent";
   }
 
-  // Only award this category with enough consistent records.
   if(
     records.length >= 7 &&
     deviation <= 45 &&
@@ -447,7 +529,6 @@ function showDailyRoast(records) {
 
   if(!Array.isArray(state.used)) state.used = [];
 
-  // Keep the same comment throughout the day.
   if(
     state.date === today &&
     Number.isInteger(state.roastIndex) &&
@@ -467,7 +548,6 @@ function showDailyRoast(records) {
     !state.used.includes(item.index)
   );
 
-  // If the category library is exhausted, use any unused roast.
   if(!choices.length) {
     choices = roasts.map((roast,index)=>({
       roast:roast,
@@ -477,7 +557,6 @@ function showDailyRoast(records) {
     );
   }
 
-  // Reset only after every comment has been used.
   if(!choices.length) {
     state.used = [];
 
@@ -579,4 +658,5 @@ render();
 </script>
 
 </body>
-</html>
+  </html>
+  
