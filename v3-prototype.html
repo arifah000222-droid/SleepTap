@@ -1,0 +1,225 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SleepTap V3</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #f3efff;
+  color: #39314f;
+  text-align: center;
+  padding: 22px;
+}
+main {
+  max-width: 440px;
+  margin: auto;
+}
+.card {
+  background: white;
+  padding: 20px;
+  margin: 16px 0;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px #d9d0ed;
+}
+button {
+  background: #927bc9;
+  color: white;
+  border: 0;
+  padding: 14px 22px;
+  border-radius: 14px;
+  font-size: 16px;
+  margin: 6px;
+}
+button:disabled {
+  opacity: .4;
+}
+input {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+}
+.small { color: #817795; font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🌙 SleepTap</h1>
+  <p>Your sleep, one tap at a time.</p>
+
+  <section class="card">
+    <h2 id="status">Ready for bed?</h2>
+    <label>Sleep onset estimate (minutes)</label><br><br>
+    <input id="delay" type="number" min="0" max="180" value="15">
+    <br><br>
+    <button id="sleepBtn" onclick="startSleep()">I'm going to sleep</button>
+    <button id="wakeBtn" onclick="wakeUp()" disabled>I woke up!</button>
+    <p class="small" id="message">Your records stay on this device.</p>
+  </section>
+
+  <section class="card">
+    <h2>💜 SleepTap Sleep Roast</h2>
+    <p id="roast">Your daily roast will appear here.</p>
+    <p class="small" id="category"></p>
+  </section>
+
+  <section class="card">
+    <h2>📊 Your Sleep History</h2>
+    <h3 id="average">No records yet</h3>
+    <div id="history"></div>
+  </section>
+
+  <section class="card">
+    <h2>✨ Premium</h2>
+    <p>Excel export + SleepTap Sleep Roast</p>
+    <p class="small">Premium access is a preview only. No payment is collected.</p>
+    <button disabled>Premium coming soon</button>
+  </section>
+</main>
+
+<script>
+const KEY = "sleeptap_v3_prototype";
+const ROAST_KEY = "sleeptap_v3_roasts";
+
+const roasts = [
+  ["Late sleeper", "Funny", "Kitak tok tidur atau tunggu matahari naik? 😭"],
+  ["Late sleeper", "Malaysian", "Esok nak bangun awal, malam tok masih scroll? Adoi."],
+  ["Late sleeper", "Sarawakian", "Kamek rasa kitak ngan bantal dah berunding sampai pagi."],
+  ["Long sleep", "Funny", "Bro, Dreamland dah bagi permanent resident status ke?"],
+  ["Long sleep", "Sarawakian", "Lama gilak kitak check-in alam mimpi tok!"],
+  ["Inconsistent", "Strict", "Your bedtime keeps changing. Try giving your routine more consistency."],
+  ["Inconsistent", "Malaysian", "Jadual tidur macam jadual bas. Sik tentu bila sampai."],
+  ["Inconsistent", "Funny", "Your bedtime has more plot twists than a drama series."],
+  ["Not enough", "Caring", "Your sleep estimate looks shorter than usual. Give yourself time to rest."],
+  ["Not enough", "Sarawakian", "Kitak, jangan lupa rehat. Esok masih ada hari baru."],
+  ["Too Good to Roast", "Sarawakian", "EH?! Kitak tidur ikut jadual? Kamek respect bah!"],
+  ["Too Good to Roast", "Funny", "A consistent bedtime? Who gave you permission to be this organised?"],
+  ["Too Good to Roast", "Malaysian", "Wah, tidur on time! Ini baru contoh rakyat berdisiplin."]
+];
+
+function getData() {
+  return JSON.parse(localStorage.getItem(KEY) ||
+    '{"active":null,"records":[]}');
+}
+
+function saveData(data) {
+  localStorage.setItem(KEY, JSON.stringify(data));
+}
+
+function startSleep() {
+  const delay = Math.max(0, Math.min(180,
+    Number(document.getElementById("delay").value) || 0));
+  const data = getData();
+  if (data.active) return;
+
+  data.active = {tapAt: Date.now(), delay};
+  saveData(data);
+  render();
+}
+
+function wakeUp() {
+  const data = getData();
+  if (!data.active) return;
+
+  const endAt = Date.now();
+  const sleepAt = data.active.tapAt + data.active.delay * 60000;
+  const startAt = Math.min(sleepAt, endAt);
+  const hours = (endAt - startAt) / 3600000;
+
+  data.records.unshift({
+    date: new Date(endAt).toLocaleDateString(),
+    hours: Math.max(0, hours),
+    bedtime: new Date(data.active.tapAt).getHours() * 60 +
+      new Date(data.active.tapAt).getMinutes()
+  });
+
+  data.active = null;
+  saveData(data);
+  render();
+}
+
+function getRoastType(records) {
+  if (records.length < 3) return "Funny";
+
+  const recent = records.slice(0, 7);
+  const avg = recent.reduce((s,r)=>s+r.hours,0) / recent.length;
+  const last = records[0].hours;
+
+  const times = recent.map(r=>r.bedtime);
+  const spread = Math.max(...times) - Math.min(...times);
+
+  if (spread < 60 && recent.length >= 3)
+    return "Too Good to Roast";
+
+  if (last > avg + 2) return "Long sleep";
+  if (last < avg - 2) return "Not enough";
+  if (spread >= 120) return "Inconsistent";
+  return "Funny";
+}
+
+function showDailyRoast(records) {
+  const today = new Date().toLocaleDateString();
+  let state = JSON.parse(localStorage.getItem(ROAST_KEY) ||
+    '{"date":"","used":[]}');
+
+  if (state.date !== today) state = {date:today,used:[]};
+
+  const type = getRoastType(records);
+  let choices = roasts.map((r,i)=>({r,i}))
+    .filter(x=>x.r[0]===type && !state.used.includes(x.i));
+
+  if (!choices.length) {
+    choices = roasts.map((r,i)=>({r,i}))
+      .filter(x=>!state.used.includes(x.i));
+  }
+
+  if (!choices.length) {
+    state.used = [];
+    choices = roasts.map((r,i)=>({r,i}));
+  }
+
+  const chosen = choices[Math.floor(Math.random()*choices.length)];
+  state.used.push(chosen.i);
+  localStorage.setItem(ROAST_KEY, JSON.stringify(state));
+
+  document.getElementById("roast").textContent = chosen.r[2];
+  document.getElementById("category").textContent =
+    "Today's mood: " + chosen.r[1];
+}
+
+function render() {
+  const data = getData();
+  const active = !!data.active;
+
+  document.getElementById("sleepBtn").disabled = active;
+  document.getElementById("wakeBtn").disabled = !active;
+  document.getElementById("status").textContent =
+    active ? "Sleep session in progress 🌙" : "Ready for bed?";
+
+  document.getElementById("message").textContent =
+    active ? "Your wake-up tap is waiting!" :
+    "Your records stay on this device.";
+
+  if (data.records.length) {
+    const avg = data.records.reduce((s,r)=>s+r.hours,0) /
+      data.records.length;
+    document.getElementById("average").textContent =
+      "Average: " + avg.toFixed(1) + " hours";
+  } else {
+    document.getElementById("average").textContent = "No records yet";
+  }
+
+  document.getElementById("history").innerHTML =
+    data.records.slice(0,10).map(r =>
+      `<p>${r.date} — ${r.hours.toFixed(1)} hours</p>`
+    ).join("");
+
+  showDailyRoast(data.records);
+}
+
+render();
+</script>
+</body>
+</html>
