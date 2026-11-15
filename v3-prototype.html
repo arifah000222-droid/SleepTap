@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#f3efff">
-<title>SleepTap V3</title>
+<title>SleepTap V3.1</title>
 
 <style>
 * { box-sizing: border-box; }
@@ -118,22 +118,31 @@ footer {
 <header>
   <h1>🌙 SleepTap</h1>
   <p>Your sleep, one tap at a time.</p>
-  <span class="pill">VERSION 3 PROTOTYPE</span>
+  <span class="pill">VERSION 3.1 PROTOTYPE</span>
 </header>
 
 <section class="card">
   <h2 id="status">Ready for bed?</h2>
-  <p class="small">Tap when you're going to sleep, then tap again when you wake up.</p>
+  <p class="small">
+    Tap when you're going to sleep, then tap again when you wake up.
+  </p>
 
   <label for="delay">Estimated time to fall asleep (minutes)</label>
   <br><br>
   <input id="delay" type="number" min="0" max="180" value="15">
 
   <br><br>
-  <button id="sleepBtn" onclick="startSleep()">🌙 I'm going to sleep</button>
-  <button id="wakeBtn" onclick="wakeUp()" disabled>☀️ I woke up!</button>
+  <button id="sleepBtn" onclick="startSleep()">
+    🌙 I'm going to sleep
+  </button>
 
-  <p id="message" class="small">Your records are saved on this device.</p>
+  <button id="wakeBtn" onclick="wakeUp()" disabled>
+    ☀️ I woke up!
+  </button>
+
+  <p id="message" class="small">
+    Your records are saved on this device.
+  </p>
 </section>
 
 <section class="card">
@@ -154,7 +163,8 @@ footer {
   <span class="pill" id="category">DAILY COMMENT</span>
   <p class="roast" id="roast">Preparing your daily roast...</p>
   <p class="small">
-    Your roast is based on recorded estimates, not actual sleep detection.
+    Comments are based on recorded estimates, not actual sleep detection
+    or medical assessment.
   </p>
 </section>
 
@@ -192,51 +202,93 @@ footer {
 const DATA_KEY = "sleeptap_v3_data";
 const ROAST_KEY = "sleeptap_v3_roast_history";
 
+/* ROAST LIBRARY */
+
 const roasts = [
 
+  // LATE SLEEPER
   ["Late sleeper","Funny","Your bedtime is apparently a suggestion, not a commitment. 😭"],
   ["Late sleeper","Malaysian","Esok nak bangun awal, malam ni masih scroll? Adoi!"],
   ["Late sleeper","Sarawakian","Kitak tok tidur atau tunggu matahari naik bah?"],
   ["Late sleeper","Funny","The moon is clocking out. You're still clocking in."],
   ["Late sleeper","Sarawakian","Kamek rasa kitak ngan bantal dah berunding sampai pagi."],
+  ["Late sleeper","Malaysian","Dah pukul berapa ni? Telefon tu tak reti suruh tidur ke?"],
+  ["Late sleeper","Funny","Your bedtime called. It said you've been ignoring it."],
+  ["Late sleeper","Caring","Your schedule has been leaning late lately. Try making space for a calmer wind-down."],
 
+  // LONGER THAN USUAL
   ["Long sleep","Funny","Bro, Dreamland dah bagi permanent resident status ke?"],
   ["Long sleep","Malaysian","Lama betul sesi tidur hari ni. Dah rindu dunia luar belum?"],
   ["Long sleep","Sarawakian","Lama gilak kitak check-in alam mimpi tok!"],
   ["Long sleep","Funny","Your pillow must be paying you rent."],
+  ["Long sleep","Caring","That was longer than your recent pattern. Listen to what your body needs."],
+  ["Long sleep","Malaysian","Hari ni sesi tidur extra panjang nampaknya!"],
+  ["Long sleep","Sarawakian","Bantal kitak mesti happy sebab dapat jumpa lama sikit."],
 
+  // INCONSISTENT
   ["Inconsistent","Strict","Your bedtime keeps changing. Try giving your routine more consistency."],
   ["Inconsistent","Malaysian","Jadual tidur macam jadual bas. Sik tentu bila sampai."],
   ["Inconsistent","Sarawakian","Isnin tidur awal, Selasa tidur lambat. Kitak tok ada jadual sik?"],
   ["Inconsistent","Funny","Your bedtime has more plot twists than a drama series."],
+  ["Inconsistent","Malaysian","Hari tok awal, esok lambat. Kita nak ikut jadual yang mana ni?"],
+  ["Inconsistent","Sarawakian","Jadual tidur kitak macam cuaca Sarawak, susah mok jangka!"],
+  ["Inconsistent","Caring","Your sleep times have been moving around. A gentle routine might help."],
+  ["Inconsistent","Funny","Even your calendar is confused about your bedtime."],
 
+  // SHORTER THAN USUAL
   ["Shorter than usual","Caring","Your sleep estimate is shorter than your recent pattern. Make room for rest."],
   ["Shorter than usual","Malaysian","Rehat pun penting tau. Jangan semua benda mok dikejar."],
   ["Shorter than usual","Sarawakian","Kitak, jangan lupa rehat. Esok masih ada hari baru."],
   ["Shorter than usual","Funny","Your pillow misses you. Please visit more often."],
+  ["Shorter than usual","Strict","Your latest estimate is noticeably shorter. Give yourself time to rest."],
+  ["Shorter than usual","Malaysian","Assignment boleh tunggu sekejap. Rehat pun ada priority."],
+  ["Shorter than usual","Sarawakian","Sibuk macam mana pun, jangan lupa bagi badan rehat bah."],
+  ["Shorter than usual","Caring","One shorter night doesn't define your routine. Take care of yourself."],
 
+  // TOO GOOD TO ROAST
   ["Too Good to Roast","Sarawakian","EH?! Kitak tidur ikut jadual? Kamek respect bah!"],
   ["Too Good to Roast","Funny","A consistent bedtime? Who gave you permission to be this organised?"],
   ["Too Good to Roast","Malaysian","Wah, tidur on time! Ini baru contoh rakyat berdisiplin."],
   ["Too Good to Roast","Caring","Look at you building a steady routine. Keep taking care of yourself."],
+  ["Too Good to Roast","Sarawakian","Sikda benda mok di-roast. Kitak memang steady bah!"],
+  ["Too Good to Roast","Funny","Your bedtime is so organised, even your alarm is impressed."],
+  ["Too Good to Roast","Malaysian","Konsisten betul! Siapa ajar disiplin tok?"],
+  ["Too Good to Roast","Caring","Your routine looks steady. Keep being kind to yourself."],
 
+  // GENERAL
   ["General","Funny","Your pillow has been waiting patiently for your next appointment."],
   ["General","Malaysian","Tidur cukup, air cukup, jangan lupa jaga diri."],
-  ["General","Sarawakian","Sik kira sibuk macam mana, rehat tetap penting bah."]
+  ["General","Sarawakian","Sik kira sibuk macam mana, rehat tetap penting bah."],
+  ["General","Caring","Let's collect a few more sleep records before judging your routine."],
+  ["General","Funny","Not enough data for a roast. You're getting a free pass today."],
+  ["General","Malaysian","Data belum cukup. Kita tunggu dulu, jangan gelabah."],
+  ["General","Sarawakian","Data sik cukup gik. Kamek bagi kitak chance dulu."]
 ];
+
+
+/* DATA STORAGE */
 
 function getData() {
   try {
-    return JSON.parse(localStorage.getItem(DATA_KEY)) ||
-      {active:null,records:[]};
-  } catch(e) {
-    return {active:null,records:[]};
-  }
+    const saved = JSON.parse(localStorage.getItem(DATA_KEY));
+
+    if(saved && Array.isArray(saved.records)) {
+      return {
+        active: saved.active || null,
+        records: saved.records
+      };
+    }
+  } catch(e) {}
+
+  return {active:null,records:[]};
 }
 
 function saveData(data) {
   localStorage.setItem(DATA_KEY,JSON.stringify(data));
 }
+
+
+/* SLEEP TRACKING */
 
 function startSleep() {
   const data = getData();
@@ -244,8 +296,14 @@ function startSleep() {
   if(data.active) return;
 
   const input = document.getElementById("delay");
-  const delay = Math.max(0,Math.min(180,
-    Number(input.value) || 0));
+  const raw = Number(input.value);
+
+  if(input.value === "" || !Number.isFinite(raw)) {
+    alert("Please enter a valid sleep delay.");
+    return;
+  }
+
+  const delay = Math.max(0,Math.min(180,raw));
 
   data.active = {
     tapAt:Date.now(),
@@ -267,79 +325,166 @@ function wakeUp() {
     endAt
   );
 
-  const hours = (endAt-startAt)/3600000;
+  const hours = Math.max(0,(endAt-startAt)/3600000);
+
+  const bedtimeDate = new Date(data.active.tapAt);
 
   data.records.unshift({
     date:new Date(endAt).toISOString(),
-    hours:Math.max(0,hours),
-    bedtime:new Date(data.active.tapAt).getHours()*60+
-      new Date(data.active.tapAt).getMinutes()
+    hours:hours,
+    bedtime:bedtimeDate.getHours()*60+
+      bedtimeDate.getMinutes()
   });
 
   data.active = null;
+
   saveData(data);
   render();
 }
 
+
+/* TIME CALCULATIONS */
+
+function circularDistance(a,b) {
+  const difference = Math.abs(a-b);
+  return Math.min(difference,1440-difference);
+}
+
+function averageBedtimeDeviation(times) {
+  if(!times.length) return Infinity;
+
+  const radians = times.map(t=>t/1440*Math.PI*2);
+
+  const sinMean = radians.reduce((s,v)=>s+Math.sin(v),0)/radians.length;
+  const cosMean = radians.reduce((s,v)=>s+Math.cos(v),0)/radians.length;
+
+  const meanAngle = Math.atan2(sinMean,cosMean);
+  const meanTime = ((meanAngle/(Math.PI*2)*1440)+1440)%1440;
+
+  return times.reduce(
+    (sum,t)=>sum+circularDistance(t,meanTime),0
+  )/times.length;
+}
+
+
+/* SMART ROAST CLASSIFICATION */
+
 function getRoastType(records) {
-  if(records.length < 3) return "General";
+  if(records.length < 5) return "General";
 
   const recent = records.slice(0,7);
-  const avg = recent.reduce((s,r)=>s+r.hours,0)/recent.length;
-  const latest = records[0];
+  const latest = recent[0];
 
-  if(latest.hours > avg+2) return "Long sleep";
-  if(latest.hours < avg-2) return "Shorter than usual";
+  // Compare latest duration with earlier sessions.
+  const previous = recent.slice(1);
 
+  if(previous.length >= 3) {
+    const previousAverage =
+      previous.reduce((sum,r)=>sum+r.hours,0)/previous.length;
+
+    if(latest.hours > previousAverage+2) {
+      return "Long sleep";
+    }
+
+    if(latest.hours < previousAverage-2) {
+      return "Shorter than usual";
+    }
+  }
+
+  // Circular bedtime calculation handles midnight correctly.
   const times = recent.map(r=>r.bedtime);
-  const sorted = [...times].sort((a,b)=>a-b);
-  const spread = sorted[sorted.length-1]-sorted[0];
+  const deviation = averageBedtimeDeviation(times);
 
-  if(spread >= 120) return "Inconsistent";
+  // A majority of recent bedtimes must be late.
+  const lateCount = times.filter(
+    t=>t>=0 && t<360
+  ).length;
 
-  if(latest.bedtime >= 0 && latest.bedtime < 360)
+  if(lateCount >= Math.ceil(times.length*0.6)) {
     return "Late sleeper";
+  }
 
-  return "Too Good to Roast";
+  // Large average deviation suggests an inconsistent routine.
+  if(deviation >= 90) {
+    return "Inconsistent";
+  }
+
+  // Only award this category with enough consistent records.
+  if(
+    records.length >= 7 &&
+    deviation <= 45 &&
+    lateCount < Math.ceil(times.length*0.6)
+  ) {
+    return "Too Good to Roast";
+  }
+
+  return "General";
+}
+
+
+/* DAILY ROAST SYSTEM */
+
+function getLocalDateKey() {
+  const now = new Date();
+
+  const year = now.getFullYear();
+  const month = String(now.getMonth()+1).padStart(2,"0");
+  const day = String(now.getDate()).padStart(2,"0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function showDailyRoast(records) {
-  const today = new Date().toLocaleDateString();
+  const today = getLocalDateKey();
 
   let state;
 
   try {
-    state = JSON.parse(localStorage.getItem(ROAST_KEY)) ||
-      {date:"",used:[],roastIndex:null};
+    state = JSON.parse(localStorage.getItem(ROAST_KEY)) || {};
   } catch(e) {
-    state = {date:"",used:[],roastIndex:null};
+    state = {};
   }
 
   if(!Array.isArray(state.used)) state.used = [];
 
-  // Keep today's comment unchanged
-  if(state.date===today &&
-     Number.isInteger(state.roastIndex) &&
-     roasts[state.roastIndex]) {
-
+  // Keep the same comment throughout the day.
+  if(
+    state.date === today &&
+    Number.isInteger(state.roastIndex) &&
+    roasts[state.roastIndex]
+  ) {
     displayRoast(roasts[state.roastIndex]);
     return;
   }
 
   const type = getRoastType(records);
 
-  let choices = roasts.map((r,i)=>({r,i}))
-    .filter(x=>x.r[0]===type && !state.used.includes(x.i));
+  let choices = roasts.map((roast,index)=>({
+    roast:roast,
+    index:index
+  })).filter(item=>
+    item.roast[0]===type &&
+    !state.used.includes(item.index)
+  );
 
+  // If the category library is exhausted, use any unused roast.
   if(!choices.length) {
-    choices = roasts.map((r,i)=>({r,i}))
-      .filter(x=>!state.used.includes(x.i));
+    choices = roasts.map((roast,index)=>({
+      roast:roast,
+      index:index
+    })).filter(item=>
+      !state.used.includes(item.index)
+    );
   }
 
-  // Only repeat after the full library is used
+  // Reset only after every comment has been used.
   if(!choices.length) {
     state.used = [];
-    choices = roasts.map((r,i)=>({r,i}));
+
+    choices = roasts.map((roast,index)=>({
+      roast:roast,
+      index:index
+    }));
   }
 
   const chosen = choices[
@@ -347,19 +492,23 @@ function showDailyRoast(records) {
   ];
 
   state.date = today;
-  state.used.push(chosen.i);
-  state.roastIndex = chosen.i;
+  state.used.push(chosen.index);
+  state.roastIndex = chosen.index;
 
   localStorage.setItem(ROAST_KEY,JSON.stringify(state));
 
-  displayRoast(chosen.r);
+  displayRoast(chosen.roast);
 }
 
 function displayRoast(roast) {
   document.getElementById("roast").textContent = roast[2];
+
   document.getElementById("category").textContent =
     roast[1].toUpperCase();
 }
+
+
+/* DASHBOARD */
 
 function render() {
   const data = getData();
@@ -377,8 +526,11 @@ function render() {
 
   const records = data.records;
 
+  // All-time average
   if(records.length) {
-    const avg = records.reduce((s,r)=>s+r.hours,0)/records.length;
+    const avg = records.reduce(
+      (sum,r)=>sum+r.hours,0
+    )/records.length;
 
     document.getElementById("average").textContent =
       avg.toFixed(1)+" hours";
@@ -391,14 +543,17 @@ function render() {
       "0 completed sessions";
   }
 
+  // Last seven days
   const weekAgo = Date.now()-7*24*60*60*1000;
+
   const weeklyRecords = records.filter(r=>
     new Date(r.date).getTime()>=weekAgo
   );
 
   if(weeklyRecords.length) {
-    const avg = weeklyRecords.reduce((s,r)=>s+r.hours,0)/
-      weeklyRecords.length;
+    const avg = weeklyRecords.reduce(
+      (sum,r)=>sum+r.hours,0
+    )/weeklyRecords.length;
 
     document.getElementById("weekly").textContent =
       avg.toFixed(1)+" hours";
@@ -406,11 +561,13 @@ function render() {
     document.getElementById("weekly").textContent = "--";
   }
 
+  // History
   document.getElementById("history").innerHTML =
     records.slice(0,15).map(r=>
       `<div class="history-item">
         ${new Date(r.date).toLocaleString()}
-        <br><strong>${r.hours.toFixed(1)} hours</strong>
+        <br>
+        <strong>${r.hours.toFixed(1)} hours</strong>
       </div>`
     ).join("") ||
     '<p class="small">No completed sessions yet.</p>';
@@ -420,5 +577,6 @@ function render() {
 
 render();
 </script>
+
 </body>
 </html>
