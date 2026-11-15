@@ -4,134 +4,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f3efff">
 <title>SleepTap V3</title>
+
 <style>
+* { box-sizing: border-box; }
+
 body {
+  margin: 0;
+  padding: 22px 16px 40px;
   font-family: Arial, sans-serif;
   background: #f3efff;
   color: #39314f;
-  text-align: center;
-  padding: 22px;
 }
+
 main {
-  max-width: 440px;
+  max-width: 460px;
   margin: auto;
 }
+
+header {
+  text-align: center;
+  padding: 15px 0;
+}
+
+header h1 {
+  font-size: 34px;
+  margin-bottom: 5px;
+}
+
+header p { color: #817795; }
+
 .card {
   background: white;
-  padding: 20px;
+  padding: 21px;
   margin: 16px 0;
-  border-radius: 20px;
-  box-shadow: 0 4px 15px #d9d0ed;
+  border-radius: 22px;
+  box-shadow: 0 4px 16px #d9d0ed;
 }
+
+h2 { font-size: 19px; }
+
 button {
+  border: 0;
   background: #927bc9;
   color: white;
-  border: 0;
-  padding: 14px 22px;
+  padding: 14px 18px;
   border-radius: 14px;
-  font-size: 16px;
-  margin: 6px;
+  font-size: 15px;
+  margin: 5px;
+  cursor: pointer;
 }
+
 button:disabled {
   opacity: .4;
+  cursor: not-allowed;
 }
+
 input {
-  padding: 10px;
-  border: 1px solid #ccc;
+  padding: 11px;
+  border: 1px solid #d9d0ed;
   border-radius: 10px;
+  width: 90px;
+  font-size: 16px;
 }
-.small { color: #817795; font-size: 13px; }
+
+.small {
+  color: #817795;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.stat {
+  font-size: 25px;
+  font-weight: bold;
+  color: #8069bb;
+}
+
+.roast {
+  font-size: 17px;
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+.pill {
+  display: inline-block;
+  background: #eee8ff;
+  color: #7259ac;
+  padding: 7px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+}
+
+.history-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #eee8f7;
+  text-align: left;
+  font-size: 14px;
+}
+
+footer {
+  text-align: center;
+  color: #9288a5;
+  font-size: 12px;
+  padding: 15px;
+}
 </style>
 </head>
+
 <body>
 <main>
+
+<header>
   <h1>🌙 SleepTap</h1>
   <p>Your sleep, one tap at a time.</p>
+  <span class="pill">VERSION 3 PROTOTYPE</span>
+</header>
 
-  <section class="card">
-    <h2 id="status">Ready for bed?</h2>
-    <label>Sleep onset estimate (minutes)</label><br><br>
-    <input id="delay" type="number" min="0" max="180" value="15">
-    <br><br>
-    <button id="sleepBtn" onclick="startSleep()">I'm going to sleep</button>
-    <button id="wakeBtn" onclick="wakeUp()" disabled>I woke up!</button>
-    <p class="small" id="message">Your records stay on this device.</p>
-  </section>
+<section class="card">
+  <h2 id="status">Ready for bed?</h2>
+  <p class="small">Tap when you're going to sleep, then tap again when you wake up.</p>
 
-  <section class="card">
-    <h2>💜 SleepTap Sleep Roast</h2>
-    <p id="roast">Your daily roast will appear here.</p>
-    <p class="small" id="category"></p>
-  </section>
+  <label for="delay">Estimated time to fall asleep (minutes)</label>
+  <br><br>
+  <input id="delay" type="number" min="0" max="180" value="15">
 
-  <section class="card">
-    <h2>📊 Your Sleep History</h2>
-    <h3 id="average">No records yet</h3>
-    <div id="history"></div>
-  </section>
+  <br><br>
+  <button id="sleepBtn" onclick="startSleep()">🌙 I'm going to sleep</button>
+  <button id="wakeBtn" onclick="wakeUp()" disabled>☀️ I woke up!</button>
 
-  <section class="card">
-    <h2>✨ Premium</h2>
-    <p>Excel export + SleepTap Sleep Roast</p>
-    <p class="small">Premium access is a preview only. No payment is collected.</p>
-    <button disabled>Premium coming soon</button>
-  </section>
+  <p id="message" class="small">Your records are saved on this device.</p>
+</section>
+
+<section class="card">
+  <h2>📊 Your Sleep Summary</h2>
+  <p class="small">Based on your recorded sleep estimates.</p>
+
+  <p class="small">All-time average</p>
+  <div class="stat" id="average">--</div>
+
+  <p class="small">Last 7 days average</p>
+  <div class="stat" id="weekly">--</div>
+
+  <p class="small" id="total">0 completed sessions</p>
+</section>
+
+<section class="card">
+  <h2>💜 SleepTap Sleep Roast</h2>
+  <span class="pill" id="category">DAILY COMMENT</span>
+  <p class="roast" id="roast">Preparing your daily roast...</p>
+  <p class="small">
+    Your roast is based on recorded estimates, not actual sleep detection.
+  </p>
+</section>
+
+<section class="card">
+  <h2>📅 Sleep History</h2>
+  <div id="history">
+    <p class="small">Your completed sessions will appear here.</p>
+  </div>
+</section>
+
+<section class="card">
+  <h2>✨ SleepTap Premium</h2>
+  <p>Unlock additional features:</p>
+  <ul>
+    <li>Excel-compatible sleep record export</li>
+    <li>SleepTap Sleep Roast</li>
+  </ul>
+  <p><strong>RM1 / 3 months</strong></p>
+  <p class="small">
+    Manual renewal. Founder access is free.
+    Payment and account features are not connected in this prototype.
+  </p>
+  <button disabled>Premium coming soon</button>
+</section>
+
+<footer>
+  Made with 💜 by SleepTap
+  <br>
+  SleepTap provides estimates, not medical advice.
+</footer>
+
 </main>
 
 <script>
-const KEY = "sleeptap_v3_prototype";
-const ROAST_KEY = "sleeptap_v3_roasts";
+const DATA_KEY = "sleeptap_v3_data";
+const ROAST_KEY = "sleeptap_v3_roast_history";
 
 const roasts = [
-  ["Late sleeper", "Funny", "Kitak tok tidur atau tunggu matahari naik? 😭"],
-  ["Late sleeper", "Malaysian", "Esok nak bangun awal, malam tok masih scroll? Adoi."],
-  ["Late sleeper", "Sarawakian", "Kamek rasa kitak ngan bantal dah berunding sampai pagi."],
-  ["Long sleep", "Funny", "Bro, Dreamland dah bagi permanent resident status ke?"],
-  ["Long sleep", "Sarawakian", "Lama gilak kitak check-in alam mimpi tok!"],
-  ["Inconsistent", "Strict", "Your bedtime keeps changing. Try giving your routine more consistency."],
-  ["Inconsistent", "Malaysian", "Jadual tidur macam jadual bas. Sik tentu bila sampai."],
-  ["Inconsistent", "Funny", "Your bedtime has more plot twists than a drama series."],
-  ["Not enough", "Caring", "Your sleep estimate looks shorter than usual. Give yourself time to rest."],
-  ["Not enough", "Sarawakian", "Kitak, jangan lupa rehat. Esok masih ada hari baru."],
-  ["Too Good to Roast", "Sarawakian", "EH?! Kitak tidur ikut jadual? Kamek respect bah!"],
-  ["Too Good to Roast", "Funny", "A consistent bedtime? Who gave you permission to be this organised?"],
-  ["Too Good to Roast", "Malaysian", "Wah, tidur on time! Ini baru contoh rakyat berdisiplin."]
+
+  ["Late sleeper","Funny","Your bedtime is apparently a suggestion, not a commitment. 😭"],
+  ["Late sleeper","Malaysian","Esok nak bangun awal, malam ni masih scroll? Adoi!"],
+  ["Late sleeper","Sarawakian","Kitak tok tidur atau tunggu matahari naik bah?"],
+  ["Late sleeper","Funny","The moon is clocking out. You're still clocking in."],
+  ["Late sleeper","Sarawakian","Kamek rasa kitak ngan bantal dah berunding sampai pagi."],
+
+  ["Long sleep","Funny","Bro, Dreamland dah bagi permanent resident status ke?"],
+  ["Long sleep","Malaysian","Lama betul sesi tidur hari ni. Dah rindu dunia luar belum?"],
+  ["Long sleep","Sarawakian","Lama gilak kitak check-in alam mimpi tok!"],
+  ["Long sleep","Funny","Your pillow must be paying you rent."],
+
+  ["Inconsistent","Strict","Your bedtime keeps changing. Try giving your routine more consistency."],
+  ["Inconsistent","Malaysian","Jadual tidur macam jadual bas. Sik tentu bila sampai."],
+  ["Inconsistent","Sarawakian","Isnin tidur awal, Selasa tidur lambat. Kitak tok ada jadual sik?"],
+  ["Inconsistent","Funny","Your bedtime has more plot twists than a drama series."],
+
+  ["Shorter than usual","Caring","Your sleep estimate is shorter than your recent pattern. Make room for rest."],
+  ["Shorter than usual","Malaysian","Rehat pun penting tau. Jangan semua benda mok dikejar."],
+  ["Shorter than usual","Sarawakian","Kitak, jangan lupa rehat. Esok masih ada hari baru."],
+  ["Shorter than usual","Funny","Your pillow misses you. Please visit more often."],
+
+  ["Too Good to Roast","Sarawakian","EH?! Kitak tidur ikut jadual? Kamek respect bah!"],
+  ["Too Good to Roast","Funny","A consistent bedtime? Who gave you permission to be this organised?"],
+  ["Too Good to Roast","Malaysian","Wah, tidur on time! Ini baru contoh rakyat berdisiplin."],
+  ["Too Good to Roast","Caring","Look at you building a steady routine. Keep taking care of yourself."],
+
+  ["General","Funny","Your pillow has been waiting patiently for your next appointment."],
+  ["General","Malaysian","Tidur cukup, air cukup, jangan lupa jaga diri."],
+  ["General","Sarawakian","Sik kira sibuk macam mana, rehat tetap penting bah."]
 ];
 
 function getData() {
-  return JSON.parse(localStorage.getItem(KEY) ||
-    '{"active":null,"records":[]}');
+  try {
+    return JSON.parse(localStorage.getItem(DATA_KEY)) ||
+      {active:null,records:[]};
+  } catch(e) {
+    return {active:null,records:[]};
+  }
 }
 
 function saveData(data) {
-  localStorage.setItem(KEY, JSON.stringify(data));
+  localStorage.setItem(DATA_KEY,JSON.stringify(data));
 }
 
 function startSleep() {
-  const delay = Math.max(0, Math.min(180,
-    Number(document.getElementById("delay").value) || 0));
   const data = getData();
-  if (data.active) return;
 
-  data.active = {tapAt: Date.now(), delay};
+  if(data.active) return;
+
+  const input = document.getElementById("delay");
+  const delay = Math.max(0,Math.min(180,
+    Number(input.value) || 0));
+
+  data.active = {
+    tapAt:Date.now(),
+    delay:delay
+  };
+
   saveData(data);
   render();
 }
 
 function wakeUp() {
   const data = getData();
-  if (!data.active) return;
+
+  if(!data.active) return;
 
   const endAt = Date.now();
-  const sleepAt = data.active.tapAt + data.active.delay * 60000;
-  const startAt = Math.min(sleepAt, endAt);
-  const hours = (endAt - startAt) / 3600000;
+  const startAt = Math.min(
+    data.active.tapAt + data.active.delay * 60000,
+    endAt
+  );
+
+  const hours = (endAt-startAt)/3600000;
 
   data.records.unshift({
-    date: new Date(endAt).toLocaleDateString(),
-    hours: Math.max(0, hours),
-    bedtime: new Date(data.active.tapAt).getHours() * 60 +
+    date:new Date(endAt).toISOString(),
+    hours:Math.max(0,hours),
+    bedtime:new Date(data.active.tapAt).getHours()*60+
       new Date(data.active.tapAt).getMinutes()
   });
 
@@ -141,52 +282,83 @@ function wakeUp() {
 }
 
 function getRoastType(records) {
-  if (records.length < 3) return "Funny";
+  if(records.length < 3) return "General";
 
-  const recent = records.slice(0, 7);
-  const avg = recent.reduce((s,r)=>s+r.hours,0) / recent.length;
-  const last = records[0].hours;
+  const recent = records.slice(0,7);
+  const avg = recent.reduce((s,r)=>s+r.hours,0)/recent.length;
+  const latest = records[0];
+
+  if(latest.hours > avg+2) return "Long sleep";
+  if(latest.hours < avg-2) return "Shorter than usual";
 
   const times = recent.map(r=>r.bedtime);
-  const spread = Math.max(...times) - Math.min(...times);
+  const sorted = [...times].sort((a,b)=>a-b);
+  const spread = sorted[sorted.length-1]-sorted[0];
 
-  if (spread < 60 && recent.length >= 3)
-    return "Too Good to Roast";
+  if(spread >= 120) return "Inconsistent";
 
-  if (last > avg + 2) return "Long sleep";
-  if (last < avg - 2) return "Not enough";
-  if (spread >= 120) return "Inconsistent";
-  return "Funny";
+  if(latest.bedtime >= 0 && latest.bedtime < 360)
+    return "Late sleeper";
+
+  return "Too Good to Roast";
 }
 
 function showDailyRoast(records) {
   const today = new Date().toLocaleDateString();
-  let state = JSON.parse(localStorage.getItem(ROAST_KEY) ||
-    '{"date":"","used":[]}');
 
-  if (state.date !== today) state = {date:today,used:[]};
+  let state;
+
+  try {
+    state = JSON.parse(localStorage.getItem(ROAST_KEY)) ||
+      {date:"",used:[],roastIndex:null};
+  } catch(e) {
+    state = {date:"",used:[],roastIndex:null};
+  }
+
+  if(!Array.isArray(state.used)) state.used = [];
+
+  // Keep today's comment unchanged
+  if(state.date===today &&
+     Number.isInteger(state.roastIndex) &&
+     roasts[state.roastIndex]) {
+
+    displayRoast(roasts[state.roastIndex]);
+    return;
+  }
 
   const type = getRoastType(records);
+
   let choices = roasts.map((r,i)=>({r,i}))
     .filter(x=>x.r[0]===type && !state.used.includes(x.i));
 
-  if (!choices.length) {
+  if(!choices.length) {
     choices = roasts.map((r,i)=>({r,i}))
       .filter(x=>!state.used.includes(x.i));
   }
 
-  if (!choices.length) {
+  // Only repeat after the full library is used
+  if(!choices.length) {
     state.used = [];
     choices = roasts.map((r,i)=>({r,i}));
   }
 
-  const chosen = choices[Math.floor(Math.random()*choices.length)];
-  state.used.push(chosen.i);
-  localStorage.setItem(ROAST_KEY, JSON.stringify(state));
+  const chosen = choices[
+    Math.floor(Math.random()*choices.length)
+  ];
 
-  document.getElementById("roast").textContent = chosen.r[2];
+  state.date = today;
+  state.used.push(chosen.i);
+  state.roastIndex = chosen.i;
+
+  localStorage.setItem(ROAST_KEY,JSON.stringify(state));
+
+  displayRoast(chosen.r);
+}
+
+function displayRoast(roast) {
+  document.getElementById("roast").textContent = roast[2];
   document.getElementById("category").textContent =
-    "Today's mood: " + chosen.r[1];
+    roast[1].toUpperCase();
 }
 
 function render() {
@@ -195,28 +367,55 @@ function render() {
 
   document.getElementById("sleepBtn").disabled = active;
   document.getElementById("wakeBtn").disabled = !active;
+
   document.getElementById("status").textContent =
     active ? "Sleep session in progress 🌙" : "Ready for bed?";
 
   document.getElementById("message").textContent =
     active ? "Your wake-up tap is waiting!" :
-    "Your records stay on this device.";
+    "Your records are saved on this device.";
 
-  if (data.records.length) {
-    const avg = data.records.reduce((s,r)=>s+r.hours,0) /
-      data.records.length;
+  const records = data.records;
+
+  if(records.length) {
+    const avg = records.reduce((s,r)=>s+r.hours,0)/records.length;
+
     document.getElementById("average").textContent =
-      "Average: " + avg.toFixed(1) + " hours";
+      avg.toFixed(1)+" hours";
+
+    document.getElementById("total").textContent =
+      records.length+" completed sessions";
   } else {
-    document.getElementById("average").textContent = "No records yet";
+    document.getElementById("average").textContent = "--";
+    document.getElementById("total").textContent =
+      "0 completed sessions";
+  }
+
+  const weekAgo = Date.now()-7*24*60*60*1000;
+  const weeklyRecords = records.filter(r=>
+    new Date(r.date).getTime()>=weekAgo
+  );
+
+  if(weeklyRecords.length) {
+    const avg = weeklyRecords.reduce((s,r)=>s+r.hours,0)/
+      weeklyRecords.length;
+
+    document.getElementById("weekly").textContent =
+      avg.toFixed(1)+" hours";
+  } else {
+    document.getElementById("weekly").textContent = "--";
   }
 
   document.getElementById("history").innerHTML =
-    data.records.slice(0,10).map(r =>
-      `<p>${r.date} — ${r.hours.toFixed(1)} hours</p>`
-    ).join("");
+    records.slice(0,15).map(r=>
+      `<div class="history-item">
+        ${new Date(r.date).toLocaleString()}
+        <br><strong>${r.hours.toFixed(1)} hours</strong>
+      </div>`
+    ).join("") ||
+    '<p class="small">No completed sessions yet.</p>';
 
-  showDailyRoast(data.records);
+  showDailyRoast(records);
 }
 
 render();
