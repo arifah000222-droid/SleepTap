@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#e9e5ff">
+<meta name="description" content="A simple tap-to-track sleep journal.">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<title>SleepTap</title>
+<style>
+:root{color-scheme:light;--bg:#f7f5ff;--panel:#fff;--ink:#302b4a;--muted:#817b9c;--lav:#dcd5ff;--lav2:#f0edff;--blue:#d9efff;--pink:#ffe5ef;--line:#e8e3f4;--purple:#6556a6;--gold:#b87937;--shadow:0 10px 28px #50447b12}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(180deg,#eeebff 0,#f8f7ff 260px,var(--bg) 100%);font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);padding:env(safe-area-inset-top) 16px calc(30px + env(safe-area-inset-bottom))}
+main{max-width:520px;margin:0 auto}.top{display:flex;justify-content:space-between;align-items:center;padding:18px 2px 28px}.brand{font-size:21px;font-weight:800;letter-spacing:-.5px}.pill{font-size:11px;color:#64598d;background:#fff9;border:1px solid #ded7f5;padding:7px 11px;border-radius:30px}
+h1{font-size:30px;line-height:1.15;margin:0 0 7px;letter-spacing:-.7px}.sub{font-size:14px;color:var(--muted);margin:0 0 22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:23px;padding:20px;margin:13px 0;box-shadow:var(--shadow)}
+.cardhead{display:flex;gap:12px;align-items:center;margin-bottom:8px}.emoji{width:43px;height:43px;display:grid;place-items:center;border-radius:15px;background:var(--lav2);font-size:23px}.emoji.blue{background:#edf7ff}.emoji.pink{background:#fff0f5}
+h2{font-size:18px;margin:0 0 4px}.hint{font-size:13px;line-height:1.5;color:var(--muted);margin:0 0 16px}
+label{font-size:12px;font-weight:700;color:#6d6688;display:block;margin:0 0 7px}
+input{width:100%;border:1px solid #ded9ed;border-radius:13px;background:#fcfbff;color:var(--ink);font-size:16px;padding:12px 13px;outline:none}
+.inputrow{display:grid;grid-template-columns:1fr auto;align-items:end;gap:10px;margin:15px 0}
+.unit{font-size:12px;color:var(--muted);padding:0 0 13px}
+button{border:0;border-radius:15px;padding:15px 16px;font-size:15px;font-weight:800;cursor:pointer;width:100%;background:#cfc5ff;color:#332b59}
+button:disabled{opacity:.42;cursor:not-allowed}.wake{background:#ffe1b9;color:#68431f}.secondary{background:#edf4ff;color:#3e5e7c}
+.status{display:none;margin-top:13px;background:#f3f0ff;padding:13px;border-radius:14px;color:#5f5684;font-size:13px;line-height:1.5}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.stat{background:#f6f3ff;border-radius:16px;padding:14px;min-width:0}.stat:nth-child(2){background:#eff8ff}.stat:nth-child(3){background:#fff2f6}.stat:nth-child(4){background:#fff8ec}
+.stat small{display:block;color:var(--muted);font-size:11px;margin-bottom:6px}.stat strong{font-size:20px;letter-spacing:-.5px;display:block;overflow-wrap:anywhere}.stat em{font-size:11px;color:var(--muted);font-style:normal}
+.sectionhead{display:flex;justify-content:space-between;align-items:center;margin:26px 3px 10px}.sectionhead h2{font-size:17px}.tiny{font-size:11px;color:var(--muted)}
+.record{display:flex;justify-content:space-between;gap:10px;padding:13px 1px;border-bottom:1px solid var(--line)}.record:last-child{border:0}.record strong{font-size:13px;display:block}.record span{font-size:11px;color:var(--muted)}.dur{font-weight:800;font-size:14px;white-space:nowrap;color:#665a9b;align-self:center}
+.month{font-weight:800;font-size:13px;margin:15px 0 2px;color:#655b8e}.empty{font-size:13px;color:var(--muted);padding:12px 0}
+.exportrow{display:flex;gap:10px;align-items:center}.exportrow button{flex:1}.note{font-size:11px;line-height:1.5;color:var(--muted);margin:12px 2px 0}
+.foot{text-align:center;color:#928ca8;font-size:11px;line-height:1.55;margin:24px 8px 8px}
+@media(min-width:520px){body{padding-top:24px}}
+</style>
+</head>
+<body>
+<main>
+ <div class="top"><div class="brand">🌙 SleepTap</div><div class="pill">your gentle sleep journal</div></div>
+ <h1 id="greeting">A little rest goes a long way.</h1><p class="sub">Two taps. Your sleep history, taken care of.</p>
+
+ <section class="card">
+  <div class="cardhead"><div class="emoji">🌙</div><div><h2>Ready to sleep?</h2><div class="tiny">Tap when you lie down.</div></div></div>
+  <p class="hint">Choose how long you think you usually take to fall asleep. SleepTap adds this to your start time.</p>
+  <div class="inputrow"><div><label for="delay">Estimated time to fall asleep</label><input id="delay" type="number" min="0" max="180" step="1" value="15"></div><div class="unit">minutes</div></div>
+  <button id="startBtn">START SLEEP</button>
+  <div id="sleepStatus" class="status" role="status"></div>
+ </section>
+
+ <section class="card">
+  <div class="cardhead"><div class="emoji blue">☀️</div><div><h2>Good morning!</h2><div class="tiny">Tap when you're up for the day.</div></div></div>
+  <p class="hint">Your estimated sleep duration will be calculated and saved automatically.</p>
+  <button id="wakeBtn" class="wake" disabled>I'M AWAKE</button>
+  <div id="wakeStatus" class="status" role="status"></div>
+ </section>
+
+ <div class="sectionhead"><h2>Your sleep overview</h2><span class="tiny">Updates when you save a session</span></div>
+ <section class="card">
+  <div class="grid">
+   <div class="stat"><small>Last sleep</small><strong id="lastSleep">—</strong><em id="lastDate">No record yet</em></div>
+   <div class="stat"><small>7-day average</small><strong id="weeklyAvg">—</strong><em>Completed sessions</em></div>
+   <div class="stat"><small>Sleep start consistency</small><strong id="consistency">—</strong><em id="consistencyNote">Based on recent records</em></div>
+   <div class="stat"><small>This month</small><strong id="monthCount">0</strong><em>Completed sessions</em></div>
+  </div>
+ </section>
+
+ <div class="sectionhead"><h2>Monthly history</h2><span class="tiny" id="count">0 records</span></div>
+ <section class="card" id="history"><div class="empty">Your completed sleep sessions will appear here.</div></section>
+
+ <div class="sectionhead"><h2>Take your data with you</h2></div>
+ <section class="card">
+  <div class="cardhead"><div class="emoji pink">📊</div><div><h2>Export sleep records</h2><div class="tiny">CSV file opens in Excel or Google Sheets</div></div></div>
+  <p class="hint">Download a spreadsheet-friendly copy of all your saved sessions.</p>
+  <button id="exportBtn" class="secondary">EXPORT TO EXCEL (CSV)</button>
+  <p class="note">Your records are stored in this browser on this device. Export a backup occasionally. CSV is compatible with Excel; it is not a native .xlsx workbook.</p>
+ </section>
+ <p class="foot">SleepTap is a simple estimate based on your taps, not a medical device or a sleep detector. It cannot tell whether you are actually asleep or measure sleep stages. Your records stay on this device unless you export them.</p>
+</main>
+<script>
+(() => {
+ const KEY="sleeptap_v2_data";
+ const $=id=>document.getElementById(id);
+ const read=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{active:null,records:[]}}catch(e){return{active:null,records:[]}}};
+ let data=read();
+ const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
+ const time=ms=>new Date(ms).toLocaleTimeString([],{hour:"numeric",minute:"2-digit"});
+ const date=ms=>new Date(ms).toLocaleDateString([],{day:"numeric",month:"short",year:"numeric"});
+ const monthKey=ms=>{const d=new Date(ms);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}`};
+ const monthName=k=>{const [y,m]=k.split("-").map(Number);return new Date(y,m-1,1).toLocaleDateString([],{month:"long",year:"numeric"})};
+ const dur=ms=>{const n=Math.max(0,Math.floor(ms/60000));return `${Math.floor(n/60)}h ${n%60}m`};
+ const avg=arr=>arr.length?arr.reduce((a,b)=>a+b,0)/arr.length:null;
+ function startMinute(ms){const d=new Date(ms);return d.getHours()*60+d.getMinutes()}
+ function consistency(records){
+   if(records.length<3)return {value:"—",note:"Need at least 3 sessions"};
+   const vals=records.slice(0,14).map(r=>startMinute(r.sleepAt));
+   // Circular mean handles sleep times around midnight.
+   const angles=vals.map(v=>v/1440*2*Math.PI);
+   const sx=avg(angles.map(Math.cos)), sy=avg(angles.map(Math.sin));
+   let mean=Math.atan2(sy,sx);if(mean<0)mean+=2*Math.PI;
+   const center=mean/(2*Math.PI)*1440;
+   const deviations=vals.map(v=>Math.min(Math.abs(v-center),1440-Math.abs(v-center)));
+   const spread=avg(deviations);
+   return {value:`±${Math.round(spread)} min`,note:"Average variation in sleep start time"};
+ }
+ function render(){
+   const active=!!data.active;
+   $("startBtn").disabled=active;$("wakeBtn").disabled=!active;
+   $("delay").disabled=active;
+   $("sleepStatus").style.display=active?"block":"none";
+   if(active){
+     const estimated=data.active.tapAt+data.active.delay*60000;
+     $("sleepStatus").textContent=`Started at ${time(data.active.tapAt)}. Estimated sleep onset: ${time(estimated)} (${data.active.delay} min later). Tap I'M AWAKE when you get up.`;
+   }
+   const records=data.records.slice().sort((a,b)=>b.endAt-a.endAt);
+   const latest=records[0];
+   $("lastSleep").textContent=latest?dur(latest.endAt-latest.sleepAt):"—";
+   $("lastDate").textContent=latest?date(latest.sleepAt):"No record yet";
+   const now=new Date();const weekAgo=new Date(now);weekAgo.setDate(now.getDate()-6);weekAgo.setHours(0,0,0,0);
+   const week=records.filter(r=>r.sleepAt>=weekAgo.getTime()&&r.sleepAt<=Date.now()).map(r=>r.endAt-r.sleepAt);
+   const weekly=avg(week);$("weeklyAvg").textContent=weekly===null?"—":dur(weekly);
+   const c=consistency(records);$("consistency").textContent=c.value;$("consistencyNote").textContent=c.note;
+   const mk=monthKey(Date.now());$("monthCount").textContent=records.filter(r=>monthKey(r.sleepAt)===mk).length;
+   $("count").textContent=`${records.length} record${records.length===1?"":"s"}`;
+   const groups={};records.forEach(r=>(groups[monthKey(r.sleepAt)]??=[]).push(r));
+   const hist=$("history");hist.innerHTML="";
+   if(!records.length){hist.innerHTML='<div class="empty">Your completed sleep sessions will appear here.</div>';return}
+   Object.keys(groups).sort().reverse().forEach(k=>{
+     const heading=document.createElement("div");heading.className="month";heading.textContent=monthName(k);hist.append(heading);
+     groups[k].forEach(r=>{
+       const row=document.createElement("div");row.className="record";
+       const left=document.createElement("div"),strong=document.createElement("strong"),span=document.createElement("span");
+       strong.textContent=date(r.sleepAt);span.textContent=`${time(r.sleepAt)} – ${time(r.endAt)}`;
+       left.append(strong,span);const right=document.createElement("div");right.className="dur";right.textContent=dur(r.endAt-r.sleepAt);
+       row.append(left,right);hist.append(row);
+     });
+   });
+ }
+ $("startBtn").addEventListener("click",()=>{
+   if(data.active)return;
+   const delay=Number($("delay").value);
+   if(!Number.isFinite(delay)||delay<0||delay>180){$("sleepStatus").style.display="block";$("sleepStatus").textContent="Please enter a delay between 0 and 180 minutes.";return}
+   data.active={tapAt:Date.now(),delay};save();render();
+ });
+ $("wakeBtn").addEventListener("click",()=>{
+   if(!data.active)return;
+   const endAt=Date.now(),sleepAt=data.active.tapAt+data.active.delay*60000;
+   if(endAt<=sleepAt){
+     const ok=confirm("Your wake-up time is earlier than the estimated sleep-onset time. Save this session using your tap time as the estimated start instead?");
+     if(!ok)return;
+     data.records.push({tapAt:data.active.tapAt,sleepAt:data.active.tapAt,endAt,delay:data.active.delay,usedFallback:true});
+   }else{
+     data.records.push({tapAt:data.active.tapAt,sleepAt,endAt,delay:data.active.delay,usedFallback:false});
+   }
+   data.active=null;save();render();
+   $("wakeStatus").style.display="block";$("wakeStatus").textContent="Saved! Your sleep session has been added to your history.";
+ });
+ $("exportBtn").addEventListener("click",()=>{
+   if(!data.records.length){alert("There are no completed sleep records to export yet.");return}
+   const rows=[["Sleep date","Tapped start","Estimated sleep onset","Wake-up time","Estimated duration (minutes)","Fall-asleep estimate (minutes)"]];
+   data.records.slice().sort((a,b)=>a.sleepAt-b.sleepAt).forEach(r=>{
+     rows.push([date(r.sleepAt),new Date(r.tapAt).toLocaleString(),new Date(r.sleepAt).toLocaleString(),new Date(r.endAt).toLocaleString(),Math.max(0,Math.round((r.endAt-r.sleepAt)/60000)),r.delay]);
+   });
+   const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\r\n");
+   const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+   const url=URL.createObjectURL(blob),a=document.createElement("a");
+   a.href=url;a.download="SleepTap-sleep-records.csv";document.body.append(a);a.click();a.remove();URL.revokeObjectURL(url);
+ });
+ const h=new Date().getHours();$("greeting").textContent=h<12?"A gentle start to your day ☀️":h<18?"Take a little time for yourself 🌷":"A little rest goes a long way 🌙";
+ render();
+ if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("./sw.js").catch(()=>{});
+})();
+</script>
+</body>
+</html>
