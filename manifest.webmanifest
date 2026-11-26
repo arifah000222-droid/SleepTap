@@ -1,7 +1,8 @@
+
 {
   "name": "SleepTap - Simple Sleep Tracker",
   "short_name": "SleepTap",
-"start_url": "./v3-prototype.html"
+  "start_url": "./v3-prototype.html",
   "display": "standalone",
   "background_color": "#f7f5ff",
   "theme_color": "#e9e5ff",
